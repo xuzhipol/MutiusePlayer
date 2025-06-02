@@ -19,6 +19,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 public class mediaplay extends AppCompatActivity {
 
+   // private LinearLayout df=findViewById(R.id.Linearlayout1);
     private static final int REQUEST_READ_STORAGE = 1;
     private static final int REQUEST_PICK_VIDEO = 2;
 
@@ -45,6 +47,16 @@ public class mediaplay extends AppCompatActivity {
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnPlayPause = findViewById(R.id.btnPlayPause);
 
+        videoView.setOnErrorListener((mp, what, extra) -> {
+            Toast.makeText(this, "播放错误", Toast.LENGTH_SHORT).show();
+            return true; // 返回true表示已处理错误
+        });
+
+        videoView.setOnPreparedListener(mp -> {
+            // 视频准备完成时回调
+            videoView.start();
+        });
+
         // 设置媒体控制器
         MediaController mediaController = new MediaController(this);
         mediaController.setAnchorView(videoView);
@@ -58,7 +70,7 @@ public class mediaplay extends AppCompatActivity {
     private void pickVideo() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("video/*");
-        startActivityForResult(Intent.createChooser(intent, "选择视频"), REQUEST_PICK_VIDEO);
+        startActivityForResult(Intent.createChooser(intent,"选择视频"), REQUEST_PICK_VIDEO);
     }
 
 
@@ -97,9 +109,9 @@ public class mediaplay extends AppCompatActivity {
             // 使用这个URI播放视频
             videoView.setVideoURI(videoUri);
             videoView.start();
+           // df.setScaleY(videoView.getHeight());
             btnPlayPause.setText("暂停");
-            // }
+           }
         }
     }
 
-}
