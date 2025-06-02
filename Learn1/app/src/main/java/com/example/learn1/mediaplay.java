@@ -39,7 +39,7 @@ public class mediaplay extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.vedio);
 
         videoView = findViewById(R.id.videoView);
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
@@ -50,74 +50,16 @@ public class mediaplay extends AppCompatActivity {
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
 
-        btnSelectVideo.setOnClickListener(v -> checkPermissionAndPickVideo());
+        btnSelectVideo.setOnClickListener(v -> pickVideo());
         btnPlayPause.setOnClickListener(v -> togglePlayPause());
     }
 
-    private void checkPermissionAndPickVideo() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    REQUEST_READ_STORAGE);
-        } else {
-            pickVideo();
-        }
-    }
 
     private void pickVideo() {
-//        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-//        startActivityForResult(intent, REQUEST_PICK_VIDEO);
-       // Environment s=new Environment();
-//        File sdCardVideo = new File(Environment.getExternalStorageDirectory(), "下载/1.mp4");
-//        if (sdCardVideo.exists()) {
-//            videoView.setVideoPath(sdCardVideo.getAbsolutePath());
-//            videoView.start();
-//        }
-
-
-            String[] projection = {
-                    MediaStore.Video.Media._ID,
-                    MediaStore.Video.Media.DISPLAY_NAME,
-                    MediaStore.Video.Media.DURATION,
-                    MediaStore.Video.Media.SIZE
-            };
-
-            String selection = MediaStore.Video.Media.RELATIVE_PATH + "=?";
-            String[] selectionArgs = new String[]{};
-            String sortOrder = MediaStore.Video.Media.DISPLAY_NAME + " ASC";
-
-            try (Cursor cursor = getContentResolver().query(
-                    MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                    projection,
-                    selection,
-                    selectionArgs,
-                    sortOrder
-            )) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID);
-                    int nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME);
-                    int durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION);
-                    int sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE);
-
-                    do {
-                        long id = cursor.getLong(idColumn);
-                        String name = cursor.getString(nameColumn);
-                        int duration = cursor.getInt(durationColumn);
-                        int size = cursor.getInt(sizeColumn);
-
-                        Uri contentUri = ContentUris.withAppendedId(
-                                MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id);
-
-                        // 处理视频文件
-                        Log.d("Video", "Name: " + name + ", URI: " + contentUri);
-                        videoView.setVideoURI(contentUri);
-                        videoView.start();
-
-                    } while (cursor.moveToNext());
-                }
-            }
-        }
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("video/*");
+        startActivityForResult(Intent.createChooser(intent, "选择视频"), REQUEST_PICK_VIDEO);
+    }
 
 
     private void togglePlayPause() {
@@ -146,26 +88,18 @@ public class mediaplay extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_PICK_VIDEO && resultCode == RESULT_OK && data != null) {
-            Uri selectedVideoUri = data.getData();
-            videoView.setVideoURI(selectedVideoUri);
+            Uri videoUri = data.getData();
+            // 使用这个URI播放视频
+            videoView.setVideoURI(videoUri);
             videoView.start();
             btnPlayPause.setText("暂停");
+            // }
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_READ_STORAGE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pickVideo();
-            } else {
-                Toast.makeText(this, "需要存储权限才能选择视频", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 }
